@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexGuard — AI-Driven Next-Gen Firewall</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --neon:#00d4ff;
+  --neon2:#0088ff;
+  --neon3:#7c3aed;
+  --glow:rgba(0,212,255,0.4);
+  --glow2:rgba(0,136,255,0.25);
+  --glass:rgba(255,255,255,0.04);
+  --glass2:rgba(255,255,255,0.08);
+  --glass3:rgba(0,212,255,0.06);
+  --border:rgba(0,212,255,0.18);
+  --border2:rgba(255,255,255,0.08);
+  --bg:#020810;
+  --bg2:#030d1a;
+  --text:#e8f4ff;
+  --text2:rgba(232,244,255,0.6);
+  --text3:rgba(232,244,255,0.35);
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Space Grotesk',sans-serif;
+  --inter:'Inter',sans-serif;
+}
+
+html{scroll-behavior:smooth;overflow-x:hidden}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  min-height:100vh;
+  overflow-x:hidden;
+  cursor:none;
+}
+
+/* Custom cursor */
+.cursor{
+  position:fixed;width:12px;height:12px;
+  background:var(--neon);
+  border-radius:50%;
+  pointer-events:none;z-index:99999;
+  transition:transform 0.1s,opacity 0.2s;
+  mix-blend-mode:screen;
+  box-shadow:0 0 20px var(--neon),0 0 40px rgba(0,212,255,0.5);
+}
+.cursor-ring{
+  position:fixed;width:36px;height:36px;
+  border:1px solid rgba(0,212,255,0.5);
+  border-radius:50%;
+  pointer-events:none;z-index:99998;
+  transition:transform 0.15s ease,width 0.2s,height 0.2s;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:#010810}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--neon),var(--neon2));border-radius:2px}
+
+/* ===== CANVAS BG ===== */
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+/* ===== NAV ===== */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  padding:1.2rem 4rem;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(2,8,16,0.6);
+  backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+  transition:all 0.3s;
+}
+nav.scrolled{padding:0.8rem 4rem;background:rgba(2,8,16,0.92)}
+
+.logo{
+  display:flex;align-items:center;gap:12px;
+  font-weight:700;font-size:1.25rem;letter-spacing:-0.02em;
+  text-decoration:none;color:var(--text);
+}
+.logo-icon{
+  width:36px;height:36px;
+  background:linear-gradient(135deg,var(--neon),var(--neon2));
+  border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.85rem;font-weight:700;color:#000;
+  font-family:var(--mono);
+  box-shadow:0 0 20px rgba(0,212,255,0.5);
+  position:relative;overflow:hidden;
+}
+.logo-icon::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,0.3) 50%,transparent 60%);
+  animation:logoshine 3s infinite;
+}
+@keyframes logoshine{0%,100%{transform:translateX(-100%)}50%{transform:translateX(200%)}}
+
+.logo span{
+  background:linear-gradient(90deg,var(--text),var(--neon));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+
+.nav-links{display:flex;align-items:center;gap:2rem}
+.nav-links a{
+  color:var(--text2);text-decoration:none;font-size:0.88rem;font-weight:500;
+  letter-spacing:0.02em;transition:color 0.2s;position:relative;
+}
+.nav-links a::after{
+  content:'';position:absolute;bottom:-4px;left:0;right:0;height:1px;
+  background:var(--neon);transform:scaleX(0);transform-origin:left;
+  transition:transform 0.3s;
+}
+.nav-links a:hover{color:var(--neon)}
+.nav-links a:hover::after{transform:scaleX(1)}
+
+.btn-nav{
+  padding:0.55rem 1.4rem;
+  background:transparent;
+  border:1px solid var(--neon);
+  border-radius:8px;
+  color:var(--neon);
+  font-family:var(--sans);font-size:0.85rem;font-weight:600;
+  cursor:pointer;transition:all 0.25s;
+  position:relative;overflow:hidden;
+}
+.btn-nav::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--neon),var(--neon2));
+  opacity:0;transition:opacity 0.25s;z-index:-1;
+}
+.btn-nav:hover{color:#000;border-color:transparent;box-shadow:0 0 30px rgba(0,212,255,0.5)}
+.btn-nav:hover::before{opacity:1}
+
+/* ===== SECTIONS ===== */
+section{position:relative;z-index:1}
+
+/* ===== HERO ===== */
+#hero{
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  padding:8rem 4rem 6rem;
+  text-align:center;
+  overflow:hidden;
+}
+
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:0.4rem 1.1rem;
+  background:rgba(0,212,255,0.08);
+  border:1px solid rgba(0,212,255,0.25);
+  border-radius:999px;
+  font-family:var(--mono);font-size:0.75rem;font-weight:500;
+  color:var(--neon);
+  letter-spacing:0.1em;text-transform:uppercase;
+  margin-bottom:2.5rem;
+  animation:fadeup 0.8s ease both;
+}
+.badge-dot{
+  width:6px;height:6px;border-radius:50%;background:var(--neon);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,0.6)}50%{box-shadow:0 0 0 6px rgba(0,212,255,0)}}
+@keyframes fadeup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.hero-title{
+  font-family:var(--sans);
+  font-size:clamp(2.8rem,6vw,5.2rem);
+  font-weight:700;
+  line-height:1.05;
+  letter-spacing:-0.04em;
+  margin-bottom:1.5rem;
+  animation:fadeup 0.8s 0.1s ease both;
+}
+.title-line1{display:block;color:var(--text)}
+.title-line2{
+  display:block;
+  background:linear-gradient(90deg,var(--neon) 0%,#4fc3f7 50%,var(--neon2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(0,212,255,0.5));
+}
+.title-line3{display:block;color:var(--text);opacity:0.85}
+
+.hero-sub{
+  max-width:640px;margin:0 auto 3rem;
+  font-size:1.1rem;font-weight:400;
+  color:var(--text2);line-height:1.7;
+  animation:fadeup 0.8s 0.2s ease both;
+}
+
+.hero-actions{
+  display:flex;align-items:center;justify-content:center;gap:1.2rem;
+  flex-wrap:wrap;
+  animation:fadeup 0.8s 0.3s ease both;
+}
+
+.btn-primary{
+  padding:0.85rem 2.2rem;
+  background:linear-gradient(135deg,var(--neon),var(--neon2));
+  border:none;border-radius:10px;
+  color:#000;font-family:var(--sans);font-size:0.95rem;font-weight:700;
+  cursor:pointer;transition:all 0.25s;
+  box-shadow:0 0 30px rgba(0,212,255,0.4),0 4px 24px rgba(0,212,255,0.25);
+  position:relative;overflow:hidden;
+  letter-spacing:-0.01em;
+}
+.btn-primary::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,0.25) 50%,transparent 60%);
+  animation:btnshine 3s infinite;
+}
+@keyframes btnshine{0%,100%{transform:translateX(-100%)}50%{transform:translateX(200%)}}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 50px rgba(0,212,255,0.6),0 8px 32px rgba(0,212,255,0.35)}
+
+.btn-ghost{
+  padding:0.85rem 2.2rem;
+  background:var(--glass2);
+  border:1px solid var(--border);border-radius:10px;
+  color:var(--text);font-family:var(--sans);font-size:0.95rem;font-weight:500;
+  cursor:pointer;transition:all 0.25s;
+  backdrop-filter:blur(12px);
+}
+.btn-ghost:hover{background:var(--glass3);border-color:var(--neon);color:var(--neon);box-shadow:0 0 20px rgba(0,212,255,0.15)}
+
+/* Hero orb */
+.hero-orb-wrap{
+  position:relative;width:clamp(300px,50vw,600px);height:clamp(300px,50vw,600px);
+  margin:4rem auto 2rem;
+  animation:fadeup 0.8s 0.4s ease both;
+}
+.hero-orb{
+  width:100%;height:100%;
+  border-radius:50%;
+  background:radial-gradient(ellipse at 35% 35%,rgba(0,212,255,0.15) 0%,rgba(0,136,255,0.08) 40%,transparent 70%);
+  border:1px solid rgba(0,212,255,0.15);
+  position:relative;
+  animation:orb-breathe 6s ease-in-out infinite;
+  box-shadow:0 0 80px rgba(0,212,255,0.1),inset 0 0 80px rgba(0,212,255,0.05);
+}
+@keyframes orb-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.orb-ring{
+  position:absolute;inset:-20px;border-radius:50%;
+  border:1px solid rgba(0,212,255,0.08);
+  animation:orb-breathe 6s 0.5s ease-in-out infinite;
+}
+.orb-ring2{
+  position:absolute;inset:-45px;border-radius:50%;
+  border:1px dashed rgba(0,212,255,0.05);
+  animation:spin-slow 30s linear infinite;
+}
+.orb-ring3{
+  position:absolute;inset:-70px;border-radius:50%;
+  border:1px solid rgba(0,212,255,0.04);
+  animation:spin-slow 50s linear infinite reverse;
+}
+@keyframes spin-slow{to{transform:rotate(360deg)}}
+
+.orb-core{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:55%;height:55%;
+  border-radius:50%;
+  background:radial-gradient(ellipse at 40% 35%,rgba(0,212,255,0.3),rgba(0,136,255,0.15) 50%,transparent);
+  animation:orb-breathe 4s ease-in-out infinite;
+  box-shadow:0 0 40px rgba(0,212,255,0.3),0 0 80px rgba(0,212,255,0.1);
+}
+
+/* Floating nodes on orb */
+.orb-node{
+  position:absolute;
+  width:10px;height:10px;border-radius:50%;
+  background:var(--neon);
+  box-shadow:0 0 12px var(--neon);
+}
+.orb-node::after{
+  content:'';position:absolute;inset:-4px;
+  border-radius:50%;border:1px solid rgba(0,212,255,0.4);
+}
+
+/* Stats strip */
+.stats-strip{
+  display:flex;align-items:center;justify-content:center;gap:3rem;
+  flex-wrap:wrap;
+  margin-top:1rem;
+  animation:fadeup 0.8s 0.5s ease both;
+}
+.stat-item{text-align:center}
+.stat-num{
+  font-size:1.8rem;font-weight:700;
+  background:linear-gradient(135deg,var(--neon),#fff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  font-family:var(--inter);letter-spacing:-0.04em;
+}
+.stat-label{font-size:0.75rem;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-top:2px}
+.stat-divider{width:1px;height:36px;background:var(--border)}
+
+/* ===== SECTION COMMONS ===== */
+.section-pad{padding:7rem 4rem}
+.section-label{
+  font-family:var(--mono);font-size:0.72rem;font-weight:500;
+  color:var(--neon);letter-spacing:0.15em;text-transform:uppercase;
+  margin-bottom:1rem;
+  display:flex;align-items:center;gap:8px;
+}
+.section-label::before{content:'';display:block;width:24px;height:1px;background:var(--neon)}
+.section-title{
+  font-size:clamp(1.8rem,3.5vw,3rem);
+  font-weight:700;letter-spacing:-0.03em;line-height:1.1;
+  margin-bottom:1rem;
+}
+.section-title .accent{
+  background:linear-gradient(90deg,var(--neon),var(--neon2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.section-sub{
+  font-size:1rem;color:var(--text2);line-height:1.7;
+  max-width:560px;margin-bottom:3.5rem;
+}
+
+/* ===== THREAT FEED ===== */
+#threat-feed{background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
+.feed-grid{
+  display:grid;grid-template-columns:1fr 1.4fr;
+  gap:2rem;align-items:start;
+}
+.threat-log{
+  background:var(--glass);
+  border:1px solid var(--border2);
+  border-radius:16px;
+  overflow:hidden;
+  backdrop-filter:blur(16px);
+}
+.log-header{
+  padding:1rem 1.25rem;
+  border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.log-title{font-family:var(--mono);font-size:0.75rem;color:var(--neon);letter-spacing:0.08em}
+.log-live{
+  display:flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:0.7rem;color:#00ff9d;
+}
+.live-dot{
+  width:6px;height:6px;border-radius:50%;background:#00ff9d;
+  animation:pulse2 1.5s infinite;
+}
+@keyframes pulse2{0%,100%{opacity:1}50%{opacity:0.3}}
+.log-body{padding:0.5rem 0;max-height:340px;overflow:hidden}
+.log-line{
+  padding:0.55rem 1.25rem;
+  display:flex;align-items:center;gap:12px;
+  font-family:var(--mono);font-size:0.72rem;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+  transition:background 0.2s;
+  animation:logentry 0.4s ease;
+}
+@keyframes logentry{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.log-line:hover{background:rgba(0,212,255,0.04)}
+.log-time{color:var(--text3);min-width:52px}
+.log-type{
+  padding:2px 7px;border-radius:4px;font-size:0.65rem;font-weight:600;
+  letter-spacing:0.05em;min-width:68px;text-align:center;
+}
+.type-block{background:rgba(0,212,255,0.12);color:var(--neon)}
+.type-warn{background:rgba(255,170,0,0.12);color:#ffaa00}
+.type-crit{background:rgba(255,60,60,0.15);color:#ff4444;animation:critblink 1s infinite}
+@keyframes critblink{0%,100%{opacity:1}50%{opacity:0.5}}
+.type-info{background:rgba(100,220,100,0.1);color:#64dc64}
+.log-msg{color:var(--text2);flex:1}
+.log-src{color:var(--text3)}
+
+/* Threat map placeholder */
+.threat-map-card{
+  background:var(--glass);border:1px solid var(--border2);
+  border-radius:16px;overflow:hidden;
+  backdrop-filter:blur(16px);
+}
+.map-header{
+  padding:1rem 1.25rem;border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.map-title{font-family:var(--mono);font-size:0.75rem;color:var(--neon);letter-spacing:0.08em}
+#threat-canvas{display:block;width:100%;height:300px;background:rgba(0,8,20,0.8)}
+.map-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border-top:1px solid var(--border2);
+}
+.map-stat{
+  padding:1rem 1.25rem;text-align:center;
+  border-right:1px solid var(--border2);
+}
+.map-stat:last-child{border-right:none}
+.map-stat-n{font-size:1.4rem;font-weight:700;color:var(--neon);font-family:var(--inter)}
+.map-stat-l{font-size:0.7rem;color:var(--text3);margin-top:2px}
+
+/* ===== FEATURES ===== */
+#features{background:var(--bg2)}
+.features-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;
+}
+.feat-card{
+  padding:2rem 1.75rem;
+  background:var(--glass);
+  border:1px solid var(--border2);
+  border-radius:16px;
+  backdrop-filter:blur(16px);
+  position:relative;overflow:hidden;
+  transition:all 0.35s cubic-bezier(0.4,0,0.2,1);
+  cursor:default;
+}
+.feat-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--neon),transparent);
+  opacity:0;transition:opacity 0.35s;
+}
+.feat-card::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at var(--mx,50%) var(--my,50%),rgba(0,212,255,0.06) 0%,transparent 60%);
+  opacity:0;transition:opacity 0.35s;
+}
+.feat-card:hover{
+  transform:translateY(-4px);
+  border-color:rgba(0,212,255,0.3);
+  box-shadow:0 20px 60px rgba(0,212,255,0.1),0 0 0 1px rgba(0,212,255,0.1);
+}
+.feat-card:hover::before{opacity:1}
+.feat-card:hover::after{opacity:1}
+
+.feat-icon{
+  width:48px;height:48px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:1.25rem;
+  font-size:1.25rem;
+  position:relative;z-index:1;
+}
+.icon-blue{background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.2)}
+.icon-purple{background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.25)}
+.icon-green{background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.2)}
+.feat-title{font-size:1.05rem;font-weight:600;margin-bottom:0.6rem;letter-spacing:-0.02em;position:relative;z-index:1}
+.feat-desc{font-size:0.875rem;color:var(--text2);line-height:1.65;position:relative;z-index:1}
+
+.feat-card.wide{grid-column:span 2}
+.feat-card.wide .feat-inner{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center}
+
+/* ===== ARCHITECTURE ===== */
+#architecture{background:var(--bg)}
+.arch-canvas-wrap{
+  position:relative;
+  border-radius:20px;overflow:hidden;
+  border:1px solid var(--border);
+  background:rgba(0,5,15,0.8);
+  backdrop-filter:blur(24px);
+}
+#arch-canvas{display:block;width:100%;height:500px}
+
+/* ===== ZERO TRUST ===== */
+#zero-trust{background:var(--bg2)}
+.zt-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.zt-visual{
+  position:relative;aspect-ratio:1;max-width:480px;
+}
+.zt-ring-wrap{
+  position:relative;width:100%;padding-top:100%;
+}
+.zt-ring-inner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.zt-ring{
+  position:absolute;border-radius:50%;border:1px solid rgba(0,212,255,0.12);
+}
+.zt-center{
+  width:90px;height:90px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(0,212,255,0.2),rgba(0,136,255,0.1));
+  border:1px solid rgba(0,212,255,0.4);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:0.65rem;color:var(--neon);
+  text-align:center;letter-spacing:0.05em;
+  z-index:10;position:relative;
+  box-shadow:0 0 40px rgba(0,212,255,0.3);
+}
+.zt-node{
+  position:absolute;
+  width:56px;height:56px;border-radius:12px;
+  background:rgba(0,212,255,0.06);
+  border:1px solid rgba(0,212,255,0.2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;z-index:5;
+  backdrop-filter:blur(8px);
+  transition:all 0.3s;
+}
+.zt-node:hover{background:rgba(0,212,255,0.12);box-shadow:0 0 20px rgba(0,212,255,0.2);transform:scale(1.05)}
+.zt-node-icon{font-size:1.1rem}
+.zt-node-label{font-family:var(--mono);font-size:0.55rem;color:var(--text3);text-align:center}
+
+.zt-principles{display:flex;flex-direction:column;gap:1.2rem;margin-top:2.5rem}
+.zt-principle{
+  display:flex;gap:1rem;align-items:flex-start;
+  padding:1.2rem;
+  background:var(--glass);
+  border:1px solid var(--border2);
+  border-radius:12px;
+  backdrop-filter:blur(8px);
+  transition:all 0.25s;
+}
+.zt-principle:hover{border-color:rgba(0,212,255,0.25);background:rgba(0,212,255,0.04)}
+.zt-principle-num{
+  font-family:var(--mono);font-size:0.75rem;
+  color:var(--neon);opacity:0.7;
+  min-width:24px;margin-top:2px;
+}
+.zt-principle-title{font-size:0.9rem;font-weight:600;margin-bottom:0.3rem}
+.zt-principle-desc{font-size:0.82rem;color:var(--text2);line-height:1.55}
+
+/* ===== AI ENGINE ===== */
+#ai-engine{background:var(--bg)}
+.ai-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:3rem;align-items:center}
+.ai-metrics{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.ai-metric{
+  padding:1.5rem;
+  background:var(--glass);
+  border:1px solid var(--border2);
+  border-radius:14px;
+  backdrop-filter:blur(12px);
+  transition:all 0.3s;
+  position:relative;overflow:hidden;
+}
+.ai-metric::after{
+  content:'';position:absolute;bottom:0;left:0;
+  height:2px;border-radius:1px;
+  background:linear-gradient(90deg,var(--neon),var(--neon2));
+  transition:width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+.ai-metric:hover::after{opacity:0.8}
+.metric-val{
+  font-size:2.2rem;font-weight:700;
+  font-family:var(--inter);letter-spacing:-0.04em;
+  background:linear-gradient(135deg,var(--neon),#fff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.metric-unit{font-size:1rem;font-weight:400;opacity:0.7}
+.metric-label{font-size:0.78rem;color:var(--text3);margin-top:4px;letter-spacing:0.02em}
+.metric-bar{
+  height:3px;background:rgba(255,255,255,0.06);
+  border-radius:2px;margin-top:12px;overflow:hidden;
+}
+.metric-fill{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--neon),var(--neon2));
+  box-shadow:0 0 8px rgba(0,212,255,0.5);
+}
+
+.ai-chart-wrap{
+  background:var(--glass);
+  border:1px solid var(--border2);
+  border-radius:16px;
+  padding:1.5rem;
+  backdrop-filter:blur(12px);
+}
+.chart-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:1.5rem;
+}
+.chart-title{font-size:0.85rem;font-weight:600;color:var(--text)}
+.chart-badge{
+  font-family:var(--mono);font-size:0.65rem;
+  padding:3px 8px;border-radius:4px;
+  background:rgba(0,255,100,0.1);color:#00ff64;
+  border:1px solid rgba(0,255,100,0.2);
+}
+#sparkline{display:block;width:100%;height:120px}
+
+/* ===== BLOCKCHAIN ===== */
+#blockchain{background:var(--bg2)}
+.chain-flow{
+  display:flex;align-items:center;justify-content:center;gap:0;
+  overflow-x:auto;padding:2rem 0;
+  position:relative;
+}
+.block-node{
+  flex-shrink:0;
+  width:160px;
+  padding:1.25rem;
+  background:var(--glass);
+  border:1px solid var(--border2);
+  border-radius:12px;
+  backdrop-filter:blur(12px);
+  transition:all 0.3s;
+  position:relative;
+}
+.block-node:hover{
+  transform:translateY(-3px);
+  border-color:rgba(0,212,255,0.3);
+  box-shadow:0 10px 40px rgba(0,212,255,0.15);
+}
+.block-num{
+  font-family:var(--mono);font-size:0.65rem;color:var(--neon);
+  margin-bottom:0.75rem;letter-spacing:0.05em;
+}
+.block-hash{
+  font-family:var(--mono);font-size:0.6rem;color:var(--text3);
+  word-break:break-all;line-height:1.4;margin-bottom:0.75rem;
+}
+.block-data{font-size:0.75rem;color:var(--text2);font-weight:500}
+.block-status{
+  margin-top:0.75rem;
+  font-family:var(--mono);font-size:0.6rem;
+  padding:2px 8px;border-radius:4px;
+  background:rgba(0,255,100,0.1);color:#00ff64;
+  display:inline-block;
+}
+.chain-arrow{
+  flex-shrink:0;
+  width:40px;display:flex;align-items:center;justify-content:center;
+  color:var(--neon);font-size:1rem;opacity:0.6;
+}
+
+/* ===== PRICING ===== */
+#pricing{background:var(--bg)}
+.pricing-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;
+  max-width:1100px;margin:0 auto;
+}
+.price-card{
+  padding:2.5rem 2rem;
+  background:var(--glass);
+  border:1px solid var(--border2);
+  border-radius:20px;
+  backdrop-filter:blur(16px);
+  transition:all 0.35s;
+  position:relative;overflow:hidden;
+}
+.price-card.featured{
+  border-color:rgba(0,212,255,0.4);
+  background:linear-gradient(135deg,rgba(0,212,255,0.06),rgba(0,136,255,0.04));
+  box-shadow:0 0 60px rgba(0,212,255,0.12),0 0 0 1px rgba(0,212,255,0.15);
+}
+.price-card.featured::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--neon),var(--neon2));
+}
+.price-badge{
+  display:inline-block;
+  font-family:var(--mono);font-size:0.65rem;letter-spacing:0.08em;
+  padding:3px 10px;border-radius:4px;
+  background:linear-gradient(135deg,rgba(0,212,255,0.2),rgba(0,136,255,0.15));
+  color:var(--neon);border:1px solid rgba(0,212,255,0.3);
+  margin-bottom:1.5rem;
+}
+.price-tier{font-size:1.1rem;font-weight:700;letter-spacing:-0.02em;margin-bottom:0.5rem}
+.price-desc{font-size:0.82rem;color:var(--text3);margin-bottom:2rem;line-height:1.55}
+.price-amount{
+  font-size:3rem;font-weight:700;letter-spacing:-0.05em;
+  font-family:var(--inter);
+  background:linear-gradient(135deg,var(--text),rgba(232,244,255,0.7));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.price-card.featured .price-amount{
+  background:linear-gradient(135deg,var(--neon),#fff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.price-period{font-size:0.8rem;color:var(--text3);margin-bottom:2rem}
+.price-features{list-style:none;display:flex;flex-direction:column;gap:0.75rem;margin-bottom:2rem}
+.price-features li{
+  display:flex;align-items:center;gap:10px;
+  font-size:0.85rem;color:var(--text2);
+}
+.price-features li::before{
+  content:'✓';
+  color:var(--neon);font-size:0.75rem;font-weight:700;
+  min-width:14px;
+}
+.price-features li.na{color:var(--text3)}
+.price-features li.na::before{content:'—';color:var(--text3)}
+.btn-price-primary{
+  width:100%;padding:0.85rem;
+  background:linear-gradient(135deg,var(--neon),var(--neon2));
+  border:none;border-radius:10px;
+  color:#000;font-family:var(--sans);font-size:0.9rem;font-weight:700;
+  cursor:pointer;transition:all 0.25s;
+  box-shadow:0 0 30px rgba(0,212,255,0.3);
+}
+.btn-price-primary:hover{transform:translateY(-2px);box-shadow:0 0 50px rgba(0,212,255,0.5)}
+.btn-price-ghost{
+  width:100%;padding:0.85rem;
+  background:transparent;
+  border:1px solid var(--border);border-radius:10px;
+  color:var(--text);font-family:var(--sans);font-size:0.9rem;font-weight:500;
+  cursor:pointer;transition:all 0.25s;
+}
+.btn-price-ghost:hover{border-color:var(--neon);color:var(--neon)}
+
+/* ===== COMPLIANCE BADGES ===== */
+.compliance-strip{
+  display:flex;align-items:center;justify-content:center;gap:1.5rem;
+  flex-wrap:wrap;
+  padding:3rem 4rem;
+  background:var(--bg2);
+  border-top:1px solid var(--border2);
+  border-bottom:1px solid var(--border2);
+}
+.comp-badge{
+  padding:0.55rem 1.25rem;
+  background:var(--glass);
+  border:1px solid var(--border2);
+  border-radius:8px;
+  font-family:var(--mono);font-size:0.72rem;
+  color:var(--text2);
+  letter-spacing:0.06em;
+  transition:all 0.2s;
+  backdrop-filter:blur(8px);
+}
+.comp-badge:hover{border-color:rgba(0,212,255,0.3);color:var(--neon)}
+
+/* ===== CTA ===== */
+#cta{
+  padding:8rem 4rem;
+  text-align:center;
+  background:var(--bg);
+  position:relative;overflow:hidden;
+}
+#cta::before{
+  content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,212,255,0.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+.cta-label{margin-bottom:1.5rem}
+.cta-title{
+  font-size:clamp(2rem,4vw,3.5rem);
+  font-weight:700;letter-spacing:-0.04em;line-height:1.1;
+  margin-bottom:1.2rem;
+}
+.cta-sub{
+  font-size:1rem;color:var(--text2);max-width:500px;
+  margin:0 auto 3rem;line-height:1.7;
+}
+.cta-actions{display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap}
+
+/* ===== FOOTER ===== */
+footer{
+  padding:3rem 4rem;
+  background:var(--bg2);
+  border-top:1px solid var(--border2);
+}
+.footer-inner{
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr;
+  gap:3rem;
+}
+.footer-brand{max-width:280px}
+.footer-desc{font-size:0.82rem;color:var(--text3);line-height:1.65;margin-top:0.75rem;margin-bottom:1.25rem}
+.footer-copy{font-size:0.75rem;color:var(--text3);font-family:var(--mono)}
+.footer-col-title{font-size:0.75rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:1rem}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:0.6rem}
+.footer-links a{font-size:0.83rem;color:var(--text2);text-decoration:none;transition:color 0.2s}
+.footer-links a:hover{color:var(--neon)}
+.footer-bottom{
+  margin-top:3rem;padding-top:1.5rem;
+  border-top:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:1rem;
+}
+.footer-bottom-l{font-size:0.78rem;color:var(--text3)}
+.sih-badge{
+  font-family:var(--mono);font-size:0.7rem;
+  padding:4px 10px;border-radius:6px;
+  background:rgba(0,212,255,0.08);
+  border:1px solid rgba(0,212,255,0.2);
+  color:var(--neon);
+  letter-spacing:0.05em;
+}
+
+/* ===== SCROLL ANIMATIONS ===== */
+.reveal{opacity:0;transform:translateY(30px);transition:all 0.7s cubic-bezier(0.4,0,0.2,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-left{opacity:0;transform:translateX(-30px);transition:all 0.7s cubic-bezier(0.4,0,0.2,1)}
+.reveal-left.visible{opacity:1;transform:translateX(0)}
+.reveal-right{opacity:0;transform:translateX(30px);transition:all 0.7s cubic-bezier(0.4,0,0.2,1)}
+.reveal-right.visible{opacity:1;transform:translateX(0)}
+
+/* delay classes */
+.d1{transition-delay:0.1s}
+.d2{transition-delay:0.2s}
+.d3{transition-delay:0.3s}
+.d4{transition-delay:0.4s}
+.d5{transition-delay:0.5s}
+
+/* ===== GLOW LINES ===== */
+.glow-line{
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--neon),transparent);
+  opacity:0.2;
+  margin:0;
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:1100px){
+  .feed-grid,.ai-grid,.zt-grid{grid-template-columns:1fr}
+  .features-grid{grid-template-columns:1fr 1fr}
+  .feat-card.wide{grid-column:span 2}
+  .footer-inner{grid-template-columns:1fr 1fr;gap:2rem}
+  .pricing-grid{grid-template-columns:1fr}
+  .pricing-grid .price-card{max-width:400px;margin:0 auto;width:100%}
+}
+@media(max-width:768px){
+  nav{padding:1rem 1.5rem}
+  .nav-links{display:none}
+  #hero,.section-pad{padding:6rem 1.5rem}
+  .features-grid{grid-template-columns:1fr}
+  .feat-card.wide{grid-column:span 1}
+  .feat-card.wide .feat-inner{grid-template-columns:1fr}
+  .chain-flow{justify-content:flex-start}
+  .footer-inner{grid-template-columns:1fr}
+  .stats-strip{gap:1.5rem}
+  .stat-divider{display:none}
+  .compliance-strip{padding:2rem 1.5rem}
+  footer{padding:2rem 1.5rem}
+  #cta{padding:5rem 1.5rem}
+  .zt-grid{grid-template-columns:1fr}
+  .ai-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#" class="logo">
+    <div class="logo-icon">NG</div>
+    <span>NexGuard</span>
+  </a>
+  <div class="nav-links">
+    <a href="#threat-feed">Threat Intelligence</a>
+    <a href="#features">Capabilities</a>
+    <a href="#zero-trust">Zero Trust</a>
+    <a href="#ai-engine">AI Engine</a>
+    <a href="#blockchain">Blockchain</a>
+    <a href="#pricing">Pricing</a>
+  </div>
+  <button class="btn-nav">Request Demo</button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div style="max-width:900px;margin:0 auto">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      SIH25160 · AICTE Smart India Hackathon 2025
+    </div>
+
+    <h1 class="hero-title">
+      <span class="title-line1">AI-Driven Next-Gen</span>
+      <span class="title-line2">Firewall Intelligence</span>
+      <span class="title-line3">for a Zero Trust World</span>
+    </h1>
+
+    <p class="hero-sub">
+      Dynamic threat detection powered by deep learning, immutable audit trails on blockchain, and automated Zero Trust enforcement — all in a single, unified security platform.
+    </p>
+
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="document.getElementById('threat-feed').scrollIntoView({behavior:'smooth'})">Explore Platform →</button>
+      <button class="btn-ghost" onclick="document.getElementById('ai-engine').scrollIntoView({behavior:'smooth'})">See AI in Action</button>
+    </div>
+
+    <!-- 3D ORB -->
+    <div class="hero-orb-wrap" id="orb-wrap">
+      <div class="hero-orb">
+        <div class="orb-ring"></div>
+        <div class="orb-ring2"></div>
+        <div class="orb-ring3"></div>
+        <div class="orb-core"></div>
+        <div class="orb-node" id="n1" style="top:18%;left:50%;transform:translate(-50%)"></div>
+        <div class="orb-node" id="n2" style="top:50%;right:12%"></div>
+        <div class="orb-node" id="n3" style="bottom:18%;left:50%;transform:translate(-50%)"></div>
+        <div class="orb-node" id="n4" style="top:50%;left:12%"></div>
+      </div>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat-item">
+        <div class="stat-num" id="cnt-threats">0</div>
+        <div class="stat-label">Threats Blocked</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-num">99.97%</div>
+        <div class="stat-label">Detection Rate</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-num">&lt;2ms</div>
+        <div class="stat-label">Response Time</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-num">340+</div>
+        <div class="stat-label">Attack Vectors</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- THREAT FEED -->
+<section id="threat-feed" class="section-pad">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="reveal">
+      <div class="section-label">Live Intelligence</div>
+      <h2 class="section-title">Real-Time <span class="accent">Threat Detection</span></h2>
+      <p class="section-sub">Every packet, every connection, every anomaly — classified and acted upon in under 2 milliseconds with our adaptive AI engine.</p>
+    </div>
+
+    <div class="feed-grid">
+      <div class="threat-log reveal d1">
+        <div class="log-header">
+          <span class="log-title">// THREAT_LOG.stream</span>
+          <span class="log-live"><span class="live-dot"></span>LIVE</span>
+        </div>
+        <div class="log-body" id="log-body"></div>
+      </div>
+
+      <div class="threat-map-card reveal d2">
+        <div class="map-header">
+          <span class="map-title">// GLOBAL_ATTACK_MAP.viz</span>
+          <span style="font-family:var(--mono);font-size:0.68rem;color:var(--text3)">REAL-TIME</span>
+        </div>
+        <canvas id="threat-canvas"></canvas>
+        <div class="map-stats">
+          <div class="map-stat">
+            <div class="map-stat-n" id="cnt-live">0</div>
+            <div class="map-stat-l">Live Events/s</div>
+          </div>
+          <div class="map-stat">
+            <div class="map-stat-n" id="cnt-blocked">0</div>
+            <div class="map-stat-l">Blocked Today</div>
+          </div>
+          <div class="map-stat">
+            <div class="map-stat-n">47</div>
+            <div class="map-stat-l">Countries Monitored</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- FEATURES -->
+<section id="features" class="section-pad">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="reveal" style="text-align:center">
+      <div class="section-label" style="justify-content:center">Core Capabilities</div>
+      <h2 class="section-title" style="text-align:center">Built for the <span class="accent">Modern Threat Landscape</span></h2>
+      <p class="section-sub" style="margin-left:auto;margin-right:auto;text-align:center">Six pillars of next-generation security, unified in a single intelligent platform.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feat-card reveal d1" onmousemove="tiltCard(this,event)">
+        <div class="feat-icon icon-blue">🧠</div>
+        <div class="feat-title">Deep Packet Inspection</div>
+        <p class="feat-desc">Layer 7 analysis with ML-powered payload classification. Detects zero-day exploits and obfuscated malware in encrypted traffic without compromising privacy.</p>
+      </div>
+
+      <div class="feat-card reveal d2" onmousemove="tiltCard(this,event)">
+        <div class="feat-icon icon-purple">⚡</div>
+        <div class="feat-title">Behavioral Anomaly Engine</div>
+        <p class="feat-desc">Continuous baseline profiling of network entities. Deviations from normal behavior trigger automated investigation and adaptive policy updates in real time.</p>
+      </div>
+
+      <div class="feat-card reveal d3" onmousemove="tiltCard(this,event)">
+        <div class="feat-icon icon-green">🔗</div>
+        <div class="feat-title">Blockchain Audit Trail</div>
+        <p class="feat-desc">Every security event, policy change, and access decision is cryptographically signed and appended to an immutable distributed ledger — tamper-proof by design.</p>
+      </div>
+
+      <div class="feat-card wide reveal d2" onmousemove="tiltCard(this,event)">
+        <div class="feat-inner">
+          <div>
+            <div class="feat-icon icon-blue">🛡️</div>
+            <div class="feat-title">Automated Zero Trust Enforcement</div>
+            <p class="feat-desc">Never trust, always verify. Dynamic micro-segmentation applies least-privilege access for every user, device, and workload based on real-time risk signals — no static rules, no exceptions.</p>
+          </div>
+          <div>
+            <div style="padding:1.5rem;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.12);border-radius:12px">
+              <div style="font-family:var(--mono);font-size:0.7rem;color:var(--neon);margin-bottom:1rem">Policy Evaluation</div>
+              <div id="zt-eval-bars"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feat-card reveal d3" onmousemove="tiltCard(this,event)">
+        <div class="feat-icon icon-purple">🔐</div>
+        <div class="feat-title">Encrypted Traffic Analysis</div>
+        <p class="feat-desc">Classify threats inside TLS 1.3 and QUIC streams using traffic fingerprinting and metadata analysis — without decrypting or storing user data.</p>
+      </div>
+
+      <div class="feat-card reveal d4" onmousemove="tiltCard(this,event)">
+        <div class="feat-icon icon-green">📡</div>
+        <div class="feat-title">Federated Threat Intelligence</div>
+        <p class="feat-desc">Participate in a privacy-preserving threat sharing consortium. Benefit from collective intelligence across thousands of nodes without exposing your network topology.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPLIANCE STRIP -->
+<div class="compliance-strip">
+  <span style="font-size:0.72rem;color:var(--text3);font-family:var(--mono);letter-spacing:0.1em">COMPLIANT WITH</span>
+  <div class="comp-badge">NIST CSF 2.0</div>
+  <div class="comp-badge">ISO 27001</div>
+  <div class="comp-badge">SOC 2 TYPE II</div>
+  <div class="comp-badge">GDPR</div>
+  <div class="comp-badge">HIPAA</div>
+  <div class="comp-badge">PCI DSS 4.0</div>
+  <div class="comp-badge">CERT-IN</div>
+  <div class="comp-badge">DPDP Act 2023</div>
+</div>
+
+<!-- ZERO TRUST -->
+<section id="zero-trust" class="section-pad">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="zt-grid">
+      <div class="reveal-left">
+        <div class="section-label">Zero Trust Architecture</div>
+        <h2 class="section-title">Trust <span class="accent">Nothing.</span><br>Verify <span class="accent">Everything.</span></h2>
+        <p class="section-sub">Traditional perimeter security is dead. NexGuard's Zero Trust model assumes breach by default and enforces continuous verification for every access request, regardless of network location.</p>
+
+        <div class="zt-principles">
+          <div class="zt-principle">
+            <span class="zt-principle-num">01</span>
+            <div>
+              <div class="zt-principle-title">Verify explicitly, always</div>
+              <p class="zt-principle-desc">Authenticate and authorize every request using all available data points: identity, location, device health, service, workload, and anomaly signals.</p>
+            </div>
+          </div>
+          <div class="zt-principle">
+            <span class="zt-principle-num">02</span>
+            <div>
+              <div class="zt-principle-title">Least-privilege access, dynamically enforced</div>
+              <p class="zt-principle-desc">Access rights are time-bound, just-in-time, and recalculated on every request. No standing permissions. No trust inheritance.</p>
+            </div>
+          </div>
+          <div class="zt-principle">
+            <span class="zt-principle-num">03</span>
+            <div>
+              <div class="zt-principle-title">Assume breach, isolate blast radius</div>
+              <p class="zt-principle-desc">Micro-segmentation confines lateral movement. Encrypted end-to-end sessions and analytics detect in-progress compromises before damage spreads.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal-right">
+        <div class="zt-visual">
+          <div class="zt-ring-wrap">
+            <div class="zt-ring-inner">
+              <!-- Rings -->
+              <div class="zt-ring" style="width:90%;height:90%;animation:spin-slow 25s linear infinite"></div>
+              <div class="zt-ring" style="width:70%;height:70%;animation:spin-slow 18s linear infinite reverse"></div>
+              <div class="zt-ring" style="width:50%;height:50%;animation:spin-slow 12s linear infinite"></div>
+
+              <!-- Center -->
+              <div class="zt-center" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)">
+                POLICY<br>ENGINE
+              </div>
+
+              <!-- Nodes at ring positions -->
+              <div class="zt-node" style="position:absolute;top:5%;left:50%;transform:translateX(-50%)">
+                <span class="zt-node-icon">👤</span>
+                <span class="zt-node-label">Identity</span>
+              </div>
+              <div class="zt-node" style="position:absolute;right:3%;top:50%;transform:translateY(-50%)">
+                <span class="zt-node-icon">📱</span>
+                <span class="zt-node-label">Device</span>
+              </div>
+              <div class="zt-node" style="position:absolute;bottom:5%;left:50%;transform:translateX(-50%)">
+                <span class="zt-node-icon">☁️</span>
+                <span class="zt-node-label">Workload</span>
+              </div>
+              <div class="zt-node" style="position:absolute;left:3%;top:50%;transform:translateY(-50%)">
+                <span class="zt-node-icon">🌐</span>
+                <span class="zt-node-label">Network</span>
+              </div>
+              <div class="zt-node" style="position:absolute;top:18%;right:12%">
+                <span class="zt-node-icon">📊</span>
+                <span class="zt-node-label">Data</span>
+              </div>
+              <div class="zt-node" style="position:absolute;bottom:18%;left:12%">
+                <span class="zt-node-icon">🔑</span>
+                <span class="zt-node-label">Access</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- AI ENGINE -->
+<section id="ai-engine" class="section-pad">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="reveal" style="text-align:center;margin-bottom:4rem">
+      <div class="section-label" style="justify-content:center">Neural Intelligence</div>
+      <h2 class="section-title" style="text-align:center">The <span class="accent">AI Engine</span> Inside</h2>
+      <p class="section-sub" style="margin:0 auto">A transformer-based threat classifier trained on 2.4 billion labeled security events, with continuous online learning from live traffic patterns.</p>
+    </div>
+
+    <div class="ai-grid">
+      <div class="ai-metrics reveal-left">
+        <div class="ai-metric d1">
+          <div class="metric-val">99.97<span class="metric-unit">%</span></div>
+          <div class="metric-label">True Positive Rate</div>
+          <div class="metric-bar"><div class="metric-fill" style="width:99.97%"></div></div>
+        </div>
+        <div class="ai-metric d2">
+          <div class="metric-val">0.0003<span class="metric-unit">%</span></div>
+          <div class="metric-label">False Positive Rate</div>
+          <div class="metric-bar"><div class="metric-fill" style="width:0.03%;background:linear-gradient(90deg,#00ff9d,#00cc7a)"></div></div>
+        </div>
+        <div class="ai-metric d3">
+          <div class="metric-val">1.8<span class="metric-unit">ms</span></div>
+          <div class="metric-label">Avg. Detection Latency</div>
+          <div class="metric-bar"><div class="metric-fill" style="width:18%;background:linear-gradient(90deg,var(--neon),var(--neon2))"></div></div>
+        </div>
+        <div class="ai-metric d4">
+          <div class="metric-val">2.4<span class="metric-unit">B</span></div>
+          <div class="metric-label">Training Events</div>
+          <div class="metric-bar"><div class="metric-fill" style="width:85%"></div></div>
+        </div>
+      </div>
+
+      <div class="reveal-right">
+        <div class="ai-chart-wrap">
+          <div class="chart-header">
+            <span class="chart-title">Threat Detection · Last 60 seconds</span>
+            <span class="chart-badge">● LIVE</span>
+          </div>
+          <canvas id="sparkline"></canvas>
+          <div style="margin-top:1.5rem;display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+            <div style="padding:0.75rem;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.12);border-radius:8px">
+              <div style="font-family:var(--mono);font-size:0.65rem;color:var(--neon);margin-bottom:4px">MODEL</div>
+              <div style="font-size:0.82rem;font-weight:600">TransformerGuard v4.2</div>
+              <div style="font-size:0.72rem;color:var(--text3)">340M parameters</div>
+            </div>
+            <div style="padding:0.75rem;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.12);border-radius:8px">
+              <div style="font-family:var(--mono);font-size:0.65rem;color:var(--neon);margin-bottom:4px">INFERENCE</div>
+              <div style="font-size:0.82rem;font-weight:600">Edge-Optimized</div>
+              <div style="font-size:0.72rem;color:var(--text3)">INT8 quantized ONNX</div>
+            </div>
+            <div style="padding:0.75rem;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.12);border-radius:8px">
+              <div style="font-family:var(--mono);font-size:0.65rem;color:var(--neon);margin-bottom:4px">LEARNING</div>
+              <div style="font-size:0.82rem;font-weight:600">Continual Online</div>
+              <div style="font-size:0.72rem;color:var(--text3)">Federated gradient updates</div>
+            </div>
+            <div style="padding:0.75rem;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.12);border-radius:8px">
+              <div style="font-family:var(--mono);font-size:0.65rem;color:var(--neon);margin-bottom:4px">EXPLAINABILITY</div>
+              <div style="font-size:0.82rem;font-weight:600">SHAP + Attention</div>
+              <div style="font-size:0.72rem;color:var(--text3)">Per-decision reasoning</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- BLOCKCHAIN -->
+<section id="blockchain" class="section-pad" style="background:var(--bg2)">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="reveal" style="text-align:center;margin-bottom:3rem">
+      <div class="section-label" style="justify-content:center">Immutable Ledger</div>
+      <h2 class="section-title" style="text-align:center">Blockchain-Backed <span class="accent">Audit Trail</span></h2>
+      <p class="section-sub" style="margin:0 auto">Every security event is hashed, signed, and appended to a permissioned blockchain. Tamper-evident. Court-admissible. Permanent.</p>
+    </div>
+
+    <div class="chain-flow reveal" id="chain-flow"></div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:2rem">
+      <div class="feat-card reveal d1">
+        <div class="feat-icon icon-blue" style="font-size:1rem">⛓️</div>
+        <div class="feat-title" style="font-size:0.9rem">SHA-3 Chained Hashes</div>
+        <p class="feat-desc" style="font-size:0.78rem">Each block references its predecessor via cryptographic hash — any modification invalidates the chain.</p>
+      </div>
+      <div class="feat-card reveal d2">
+        <div class="feat-icon icon-purple" style="font-size:1rem">✍️</div>
+        <div class="feat-title" style="font-size:0.9rem">ECDSA Signatures</div>
+        <p class="feat-desc" style="font-size:0.78rem">Every event carries a node-specific elliptic-curve signature proving authorship and preventing impersonation.</p>
+      </div>
+      <div class="feat-card reveal d3">
+        <div class="feat-icon icon-green" style="font-size:1rem">🏛️</div>
+        <div class="feat-title" style="font-size:0.9rem">PBFT Consensus</div>
+        <p class="feat-desc" style="font-size:0.78rem">Practical Byzantine Fault Tolerance ensures ledger consistency even when nodes are compromised or offline.</p>
+      </div>
+      <div class="feat-card reveal d4">
+        <div class="feat-icon icon-blue" style="font-size:1rem">🔍</div>
+        <div class="feat-title" style="font-size:0.9rem">Smart Contract Policies</div>
+        <p class="feat-desc" style="font-size:0.78rem">Security policies deployed as auditable, self-executing smart contracts — no manual overrides, no hidden exceptions.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" class="section-pad" style="background:var(--bg)">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="reveal" style="text-align:center;margin-bottom:3.5rem">
+      <div class="section-label" style="justify-content:center">Transparent Pricing</div>
+      <h2 class="section-title" style="text-align:center">Security at Every <span class="accent">Scale</span></h2>
+      <p class="section-sub" style="margin:0 auto">Start free. Scale to enterprise. No hidden fees, no lock-in.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <div class="price-card reveal d1">
+        <div class="price-badge">STARTER</div>
+        <div class="price-tier">Foundation</div>
+        <p class="price-desc">Protect small teams and development environments with core firewall capabilities.</p>
+        <div class="price-amount">Free</div>
+        <div class="price-period">Up to 5 nodes · No credit card</div>
+        <ul class="price-features">
+          <li>Layer 7 Deep Packet Inspection</li>
+          <li>Basic Threat Feed (24h delay)</li>
+          <li>5 Zero Trust Policies</li>
+          <li>Community Threat Intelligence</li>
+          <li class="na">Blockchain Audit Trail</li>
+          <li class="na">AI Behavioral Engine</li>
+          <li class="na">SIEM Integration</li>
+        </ul>
+        <button class="btn-price-ghost">Get Started</button>
+      </div>
+
+      <div class="price-card featured reveal d2">
+        <div class="price-badge">MOST POPULAR</div>
+        <div class="price-tier">Professional</div>
+        <p class="price-desc">Full AI-powered detection and Zero Trust enforcement for growing organizations.</p>
+        <div><span class="price-amount">₹12,999</span></div>
+        <div class="price-period">per node / month · billed annually</div>
+        <ul class="price-features">
+          <li>Everything in Foundation</li>
+          <li>Real-Time Threat Intelligence</li>
+          <li>Unlimited Zero Trust Policies</li>
+          <li>AI Behavioral Anomaly Engine</li>
+          <li>Blockchain Audit Trail</li>
+          <li>SIEM / SOAR Integration</li>
+          <li class="na">Dedicated Threat Analyst</li>
+        </ul>
+        <button class="btn-price-primary">Start 30-Day Trial</button>
+      </div>
+
+      <div class="price-card reveal d3">
+        <div class="price-badge">ENTERPRISE</div>
+        <div class="price-tier">Sovereign</div>
+        <p class="price-desc">Air-gapped deployment, government compliance, and white-glove onboarding for critical infrastructure.</p>
+        <div class="price-amount">Custom</div>
+        <div class="price-period">Volume licensing · On-premise or cloud</div>
+        <ul class="price-features">
+          <li>Everything in Professional</li>
+          <li>Air-Gapped Deployment</li>
+          <li>Dedicated Threat Analyst Team</li>
+          <li>Custom ML Model Training</li>
+          <li>DPDP / CERT-IN Compliance Pack</li>
+          <li>24×7 SLA with 15-min Response</li>
+          <li>VAPT Reports & Certification</li>
+        </ul>
+        <button class="btn-price-ghost">Contact Sales →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="reveal">
+    <div class="section-label cta-label" style="justify-content:center">Get Started Today</div>
+    <h2 class="cta-title">
+      Your Perimeter Ended.<br>
+      <span style="background:linear-gradient(90deg,var(--neon),var(--neon2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">NexGuard Begins.</span>
+    </h2>
+    <p class="cta-sub">Deploy in 15 minutes. See your first threat blocked in under an hour. No infrastructure changes required.</p>
+    <div class="cta-actions">
+      <button class="btn-primary" style="font-size:1rem;padding:1rem 2.5rem">Deploy Free Instance</button>
+      <button class="btn-ghost" style="font-size:1rem;padding:1rem 2.5rem">Schedule Architecture Review</button>
+    </div>
+    <div style="margin-top:2.5rem;font-family:var(--mono);font-size:0.72rem;color:var(--text3)">
+      SOC 2 Certified · CERT-IN Empanelled · DPDP Act Compliant · AICTE SIH25160
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="#" class="logo" style="display:inline-flex;margin-bottom:0.75rem">
+        <div class="logo-icon">NG</div>
+        <span>NexGuard</span>
+      </a>
+      <p class="footer-desc">AI-Driven Next-Generation Firewall for Dynamic Threat Detection and Zero Trust Implementation. AICTE Smart India Hackathon 2025 — Problem Statement SIH25160.</p>
+      <div class="footer-copy">© 2025 NexGuard · Blockchain & Cybersecurity Track</div>
+    </div>
+    <div>
+      <div class="footer-col-title">Platform</div>
+      <ul class="footer-links">
+        <li><a href="#">Threat Detection</a></li>
+        <li><a href="#">Zero Trust</a></li>
+        <li><a href="#">AI Engine</a></li>
+        <li><a href="#">Blockchain Ledger</a></li>
+        <li><a href="#">Integrations</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Resources</div>
+      <ul class="footer-links">
+        <li><a href="#">Documentation</a></li>
+        <li><a href="#">API Reference</a></li>
+        <li><a href="#">Threat Reports</a></li>
+        <li><a href="#">Research Papers</a></li>
+        <li><a href="#">Security Blog</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Legal</div>
+      <ul class="footer-links">
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="#">DPDP Compliance</a></li>
+        <li><a href="#">Security Disclosure</a></li>
+        <li><a href="#">SLA Agreement</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-bottom-l">Built for AICTE Smart India Hackathon 2025 · Category: Blockchain & Cybersecurity</div>
+    <div class="sih-badge">SIH25160 · 79/500</div>
+  </div>
+</footer>
+
+<script>
+// ===== CURSOR =====
+const cursor=document.getElementById('cursor'),ring=document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX;my=e.clientY;
+  cursor.style.left=mx-6+'px';cursor.style.top=my-6+'px';
+});
+function animRing(){
+  rx+=(mx-rx-18)*0.12;ry+=(my-ry-18)*0.12;
+  ring.style.left=rx+'px';ring.style.top=ry+'px';
+  requestAnimationFrame(animRing);
+}animRing();
+document.querySelectorAll('a,button').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cursor.style.transform='scale(2)';ring.style.width='50px';ring.style.height='50px'});
+  el.addEventListener('mouseleave',()=>{cursor.style.transform='scale(1)';ring.style.width='36px';ring.style.height='36px'});
+});
+
+// ===== NAV SCROLL =====
+window.addEventListener('scroll',()=>{
+  document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>60);
+});
+
+// ===== PARTICLE BG =====
+const bgC=document.getElementById('bg-canvas'),bgX=bgC.getContext('2d');
+let W,H,particles=[];
+function resizeBg(){W=bgC.width=window.innerWidth;H=bgC.height=window.innerHeight}
+resizeBg();window.addEventListener('resize',resizeBg);
+class Particle{
+  constructor(){this.reset()}
+  reset(){
+    this.x=Math.random()*W;this.y=Math.random()*H;
+    this.vx=(Math.random()-0.5)*0.3;this.vy=(Math.random()-0.5)*0.3;
+    this.r=Math.random()*1.2+0.3;this.a=Math.random()*0.4+0.1;
+    this.pulse=Math.random()*Math.PI*2;
+  }
+  draw(){
+    this.pulse+=0.01;
+    const a=this.a*(0.6+0.4*Math.sin(this.pulse));
+    bgX.beginPath();bgX.arc(this.x,this.y,this.r,0,Math.PI*2);
+    bgX.fillStyle=`rgba(0,212,255,${a})`;bgX.fill();
+    this.x+=this.vx;this.y+=this.vy;
+    if(this.x<0||this.x>W||this.y<0||this.y>H)this.reset();
+  }
+}
+for(let i=0;i<120;i++)particles.push(new Particle());
+// Draw connections
+function drawConnections(){
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<120){
+        bgX.beginPath();
+        bgX.moveTo(particles[i].x,particles[i].y);
+        bgX.lineTo(particles[j].x,particles[j].y);
+        bgX.strokeStyle=`rgba(0,212,255,${(1-d/120)*0.08})`;
+        bgX.lineWidth=0.5;bgX.stroke();
+      }
+    }
+  }
+}
+function animBg(){
+  bgX.clearRect(0,0,W,H);
+  drawConnections();
+  particles.forEach(p=>p.draw());
+  requestAnimationFrame(animBg);
+}animBg();
+
+// ===== COUNTER ANIMATION =====
+let threatened=18247;
+setInterval(()=>{
+  threatened+=Math.floor(Math.random()*7)+1;
+  document.getElementById('cnt-threats').textContent=threatened.toLocaleString();
+},800);
+let liveEv=0,blockedToday=142394;
+setInterval(()=>{
+  liveEv=Math.floor(Math.random()*850)+120;
+  blockedToday+=Math.floor(Math.random()*12);
+  document.getElementById('cnt-live').textContent=liveEv.toLocaleString();
+  document.getElementById('cnt-blocked').textContent=blockedToday.toLocaleString();
+},1200);
+
+// ===== THREAT LOG =====
+const logTypes=[
+  {cls:'type-block',label:'BLOCK'},
+  {cls:'type-warn',label:'WARN'},
+  {cls:'type-crit',label:'CRIT'},
+  {cls:'type-info',label:'ALLOW'}
+];
+const logMsgs=[
+  ['SQL injection attempt detected','194.165.2.18'],
+  ['Port scan from unknown host','45.83.64.220'],
+  ['DDoS pattern recognized','103.21.244.0'],
+  ['Brute-force SSH blocked','176.32.103.205'],
+  ['Anomalous data exfil attempt','192.0.2.88'],
+  ['Zero-day payload signature','198.51.100.4'],
+  ['Lateral movement detected','10.0.4.22'],
+  ['C2 beacon blocked','185.220.101.0'],
+  ['Ransomware fingerprint match','91.108.4.150'],
+  ['Policy allow — verified user','10.0.1.45'],
+  ['TLS fingerprint mismatch','172.217.0.100'],
+  ['Crypto mining traffic halted','104.21.24.100'],
+];
+function getTime(){const n=new Date();return n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')+':'+n.getSeconds().toString().padStart(2,'0')}
+function addLog(){
+  const lb=document.getElementById('log-body');
+  if(!lb)return;
+  const t=logTypes[Math.floor(Math.random()*logTypes.length)];
+  const m=logMsgs[Math.floor(Math.random()*logMsgs.length)];
+  const line=document.createElement('div');line.className='log-line';
+  line.innerHTML=`<span class="log-time">${getTime()}</span><span class="log-type ${t.cls}">${t.label}</span><span class="log-msg">${m[0]}</span><span class="log-src">${m[1]}</span>`;
+  lb.insertBefore(line,lb.firstChild);
+  if(lb.children.length>18)lb.removeChild(lb.lastChild);
+}
+setInterval(addLog,600);
+for(let i=0;i<14;i++)addLog();
+
+// ===== THREAT MAP CANVAS =====
+const tc=document.getElementById('threat-canvas');
+const tx=tc.getContext('2d');
+tc.width=tc.offsetWidth||700;tc.height=300;
+window.addEventListener('resize',()=>{tc.width=tc.offsetParent?.offsetWidth||700});
+const dots=[];
+function randomDot(){
+  return{
+    x:Math.random()*tc.width,y:Math.random()*tc.height,
+    tx:Math.random()*tc.width,ty:Math.random()*tc.height,
+    progress:0,speed:Math.random()*0.015+0.005,
+    color:Math.random()>0.7?'#ff4444':'#00d4ff',
+    size:Math.random()*2+1
+  };
+}
+for(let i=0;i<35;i++)dots.push(randomDot());
+function drawMap(){
+  tx.clearRect(0,0,tc.width,tc.height);
+  // Grid
+  tx.strokeStyle='rgba(0,212,255,0.05)';tx.lineWidth=1;
+  for(let x=0;x<tc.width;x+=50){tx.beginPath();tx.moveTo(x,0);tx.lineTo(x,tc.height);tx.stroke()}
+  for(let y=0;y<tc.height;y+=50){tx.beginPath();tx.moveTo(0,y);tx.lineTo(tc.width,y);tx.stroke()}
+  // Static hotspots
+  [[0.2,0.3],[0.5,0.4],[0.7,0.5],[0.15,0.7],[0.85,0.3],[0.6,0.2],[0.35,0.6]].forEach(([rx,ry])=>{
+    const cx=rx*tc.width,cy=ry*tc.height;
+    const r=tc.width/600;
+    [20,14,8].forEach((rad,i)=>{
+      tx.beginPath();tx.arc(cx,cy,rad*r,0,Math.PI*2);
+      tx.strokeStyle=`rgba(0,212,255,${0.06+i*0.04})`;tx.lineWidth=1;tx.stroke();
+    });
+    tx.beginPath();tx.arc(cx,cy,4,0,Math.PI*2);
+    tx.fillStyle='rgba(0,212,255,0.6)';tx.fill();
+    tx.beginPath();tx.arc(cx,cy,7,0,Math.PI*2);
+    tx.fillStyle='rgba(0,212,255,0.15)';tx.fill();
+  });
+  // Animated threat lines
+  dots.forEach(d=>{
+    d.progress+=d.speed;
+    if(d.progress>=1){Object.assign(d,randomDot());d.progress=0;return}
+    const cx=d.x+(d.tx-d.x)*d.progress,cy=d.y+(d.ty-d.y)*d.progress;
+    tx.beginPath();tx.moveTo(d.x,d.y);tx.lineTo(cx,cy);
+    tx.strokeStyle=d.progress<0.5?`rgba(255,68,68,${d.progress*0.6})`:`rgba(0,212,255,${(1-d.progress)*0.6})`;
+    tx.lineWidth=0.8;tx.stroke();
+    tx.beginPath();tx.arc(cx,cy,d.size,0,Math.PI*2);
+    tx.fillStyle=d.color;tx.globalAlpha=1-d.progress*0.6;tx.fill();tx.globalAlpha=1;
+  });
+  requestAnimationFrame(drawMap);
+}drawMap();
+
+// ===== FEAT CARD TILT =====
+function tiltCard(el,e){
+  const r=el.getBoundingClientRect();
+  const x=((e.clientX-r.left)/r.width)*100;
+  const y=((e.clientY-r.top)/r.height)*100;
+  el.style.setProperty('--mx',x+'%');el.style.setProperty('--my',y+'%');
+  el.style.transform=`translateY(-4px) rotateX(${(y/r.height-0.5)*4}deg) rotateY(${(x/r.width-0.5)*4}deg)`;
+}
+document.querySelectorAll('.feat-card').forEach(c=>{
+  c.addEventListener('mouseleave',()=>{c.style.transform=''});
+});
+
+// ===== ZT EVAL BARS =====
+const ztEval=document.getElementById('zt-eval-bars');
+if(ztEval){
+  const items=[
+    {label:'Identity Verification',v:98},
+    {label:'Device Posture',v:91},
+    {label:'Risk Score',v:87},
+    {label:'Access Grant',v:100},
+  ];
+  ztEval.innerHTML=items.map(i=>`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:0.72rem;color:var(--text2)">${i.label}</span>
+        <span style="font-family:var(--mono);font-size:0.68rem;color:var(--neon)">${i.v}%</span>
+      </div>
+      <div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden">
+        <div style="width:${i.v}%;height:100%;background:linear-gradient(90deg,var(--neon),var(--neon2));border-radius:2px;box-shadow:0 0 6px rgba(0,212,255,0.4)"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===== SPARKLINE =====
+const spark=document.getElementById('sparkline');
+if(spark){
+  const sx=spark.getContext('2d');
+  spark.width=spark.offsetWidth||380;spark.height=120;
+  let spData=Array.from({length:60},()=>Math.floor(Math.random()*80)+20);
+  function drawSpark(){
+    const w=spark.width,h=spark.height;
+    sx.clearRect(0,0,w,h);
+    const max=100,step=w/(spData.length-1);
+    // Gradient fill
+    const grad=sx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0,'rgba(0,212,255,0.25)');
+    grad.addColorStop(1,'rgba(0,212,255,0)');
+    sx.beginPath();sx.moveTo(0,h);
+    spData.forEach((v,i)=>{
+      const x=i*step,y=h-((v/max)*h*0.85)-4;
+      i===0?sx.lineTo(x,y):sx.lineTo(x,y);
+    });
+    sx.lineTo((spData.length-1)*step,h);sx.closePath();
+    sx.fillStyle=grad;sx.fill();
+    // Line
+    sx.beginPath();
+    spData.forEach((v,i)=>{
+      const x=i*step,y=h-((v/max)*h*0.85)-4;
+      i===0?sx.moveTo(x,y):sx.lineTo(x,y);
+    });
+    sx.strokeStyle='rgba(0,212,255,0.9)';sx.lineWidth=1.5;
+    sx.lineJoin='round';sx.stroke();
+    // Latest dot
+    const lx=(spData.length-1)*step,ly=h-((spData[spData.length-1]/max)*h*0.85)-4;
+    sx.beginPath();sx.arc(lx,ly,3,0,Math.PI*2);
+    sx.fillStyle='#00d4ff';sx.fill();
+    sx.beginPath();sx.arc(lx,ly,6,0,Math.PI*2);
+    sx.fillStyle='rgba(0,212,255,0.25)';sx.fill();
+  }
+  drawSpark();
+  setInterval(()=>{
+    spData.push(Math.floor(Math.random()*80)+20);
+    spData.shift();
+    drawSpark();
+  },1000);
+}
+
+// ===== BLOCKCHAIN FLOW =====
+const chain=document.getElementById('chain-flow');
+if(chain){
+  const blocks=[
+    {n:'#1024',hash:'3a7f...d1c9',data:'DPI Event',status:'VERIFIED'},
+    {n:'#1025',hash:'8b2e...4fa1',data:'ZT Policy',status:'VERIFIED'},
+    {n:'#1026',hash:'c19d...7e3b',data:'Auth Log',status:'VERIFIED'},
+    {n:'#1027',hash:'5f84...2a0c',data:'Alert: CRIT',status:'VERIFIED'},
+    {n:'#1028',hash:'2d63...9b5e',data:'Scan Block',status:'PENDING'},
+  ];
+  chain.innerHTML=blocks.map((b,i)=>`
+    <div class="block-node">
+      <div class="block-num">BLOCK ${b.n}</div>
+      <div class="block-hash">${b.hash}</div>
+      <div class="block-data">${b.data}</div>
+      <div class="block-status">${b.status}</div>
+    </div>
+    ${i<blocks.length-1?'<div class="chain-arrow">→</div>':''}
+  `).join('');
+}
+
+// ===== SCROLL REVEAL =====
+const revObs=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting)e.target.classList.add('visible');
+  });
+},{threshold:0.12});
+document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(el=>revObs.observe(el));
+
+// ===== METRIC BARS ANIMATE ON SCROLL =====
+const metObs=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.querySelector('.metric-fill')?.style.setProperty('width',e.target.querySelector('.metric-fill').style.width);
+    }
+  });
+},{threshold:0.3});
+document.querySelectorAll('.ai-metric').forEach(el=>metObs.observe(el));
+
+// ===== ORB PARALLAX =====
+document.addEventListener('mousemove',e=>{
+  const orb=document.getElementById('orb-wrap');
+  if(!orb)return;
+  const rx=(e.clientX/window.innerWidth-0.5)*10;
+  const ry=(e.clientY/window.innerHeight-0.5)*10;
+  orb.style.transform=`rotateX(${-ry}deg) rotateY(${rx}deg)`;
+});
+</script>
+</body>
+</html>
